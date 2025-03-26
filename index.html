@@ -5,42 +5,109 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>YouTube Video Search & Queue</title>
     <style>
+        /* Global Styles */
         body {
             font-family: Arial, sans-serif;
-            margin: 20px;
+            background-color: #000000;
+            color: #FF6600;
+            margin: 0;
+            padding: 0;
         }
-        #videoContainer {
+
+        h1 {
+            text-align: center;
             margin-top: 20px;
+            font-size: 2.5em;
         }
+
+        label, input, button {
+            font-size: 1em;
+            color: #FF6600;
+            background-color: #222222;
+            border: none;
+            padding: 10px;
+            margin: 10px;
+        }
+
+        input {
+            width: 300px;
+        }
+
+        button:hover, input:hover {
+            background-color: #444444;
+            cursor: pointer;
+        }
+
+        /* Search Results */
         #searchResults {
             margin-top: 20px;
             list-style-type: none;
             padding: 0;
+            text-align: center;
         }
+
         #searchResults li {
-            background-color: #f4f4f4;
+            background-color: #333333;
             padding: 10px;
             margin: 5px 0;
             cursor: pointer;
+            color: #FF6600;
+            transition: background-color 0.3s;
         }
+
         #searchResults li:hover {
-            background-color: #e0e0e0;
+            background-color: #444444;
         }
+
+        /* Video Queue */
         #queue {
             margin-top: 20px;
+            padding: 20px;
+            background-color: #222222;
         }
+
+        #queue h2 {
+            font-size: 2em;
+            text-align: center;
+        }
+
         #queue ul {
             list-style-type: none;
             padding: 0;
         }
+
         #queue li {
             padding: 5px;
-            background-color: #f4f4f4;
+            background-color: #333333;
             margin: 5px 0;
+            color: #FF6600;
             cursor: pointer;
+            transition: background-color 0.3s;
         }
+
         #queue li:hover {
-            background-color: #e0e0e0;
+            background-color: #444444;
+        }
+
+        /* Video Player */
+        #videoContainer {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        iframe {
+            border: none;
+        }
+
+        footer {
+            text-align: center;
+            padding: 10px;
+            background-color: #222222;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            font-size: 0.9em;
+            color: #FF6600;
         }
     </style>
 </head>
@@ -59,6 +126,10 @@
         <h2>Video Queue</h2>
         <ul id="queueList"></ul>
     </div>
+
+    <footer>
+        <p>Powered by Neocities</p>
+    </footer>
 
     <script>
         let videoQueue = [];

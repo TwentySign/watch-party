@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Video Search & Queue</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        #videoContainer {
+            margin-top: 20px;
+        }
+        #searchResults {
+            margin-top: 20px;
+            list-style-type: none;
+            padding: 0;
+        }
+        #searchResults li {
+            background-color: #f4f4f4;
+            padding: 10px;
+            margin: 5px 0;
+            cursor: pointer;
+        }
+        #searchResults li:hover {
+            background-color: #e0e0e0;
+        }
+        #queue {
+            margin-top: 20px;
+        }
+        #queue ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        #queue li {
+            padding: 5px;
+            background-color: #f4f4f4;
+            margin: 5px 0;
+            cursor: pointer;
+        }
+        #queue li:hover {
+            background-color: #e0e0e0;
+        }
+    </style>
+</head>
+<body>
+    <h1>YouTube Video Search & Queue</h1>
+
+    <label for="searchQuery">Search for Videos: </label>
+    <input type="text" id="searchQuery" placeholder="Enter video title or keyword">
+    <button onclick="searchVideos(document.getElementById('searchQuery').value)">Search</button>
+
+    <ul id="searchResults"></ul>
+
+    <div id="videoContainer"></div>
+
+    <div id="queue">
+        <h2>Video Queue</h2>
+        <ul id="queueList"></ul>
+    </div>
+
+    <script>
+        let videoQueue = [];
+
+        // Function to search YouTube videos using the YouTube API
+        function searchVideos(query) {
+            const apiKey = 'AIzaSyCJA9ozKmzeOHw9wDVhxW67Jw9tYCCLgAk'; // Replace with your actual YouTube API key
+            const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${query}&type=video&maxResults=5&key=${apiKey}`;
+            
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.items.length === 0) {
+                        alert('No videos found for this search!');
+                    } else {
+                        displaySearchResults(data.items);
+                    }
+                })
+                .catch(error => {
+                    console.error("Error fetching YouTube data:", error);
+                    alert("An error occurred while fetching videos. Please try again later.");
+                });
+        }
+
+        // Function to display the search results as a list of clickable items
+        function displaySearchResults(videos) {
+            const searchResults = document.getElementById('searchResults');
+            searchResults.innerHTML = ''; // Clear previous search results
+
+            videos.forEach(video => {
+                const listItem = document.createElement("li");
+                listItem.textContent = video.snippet.title;
+                listItem.addEventListener("click", function() {
+                    addToQueue(video.id.videoId, video.snippet.title);
+                });
+                searchResults.appendChild(listItem);
+            });
+        }
+
+        // Function to add a video to the queue and display it
+        function addToQueue(videoId, title) {
+            // Check if the video is already in the queue
+            if (videoQueue.some(item => item.videoId === videoId)) {
+                alert("This video is already in the queue.");
+                return;
+            }
+
+            // Add the video to the queue
+            videoQueue.push({ videoId, title });
+
+            // Update the video queue display
+            updateQueueDisplay();
+            alert(`${title} added to the queue!`);
+
+            // Embed the first video in the queue
+            if (videoQueue.length === 1) {
+                displayVideo(videoQueue[0].videoId);
+            }
+        }
+
+        // Function to display the video player for the first video in the queue
+        function displayVideo(videoId) {
+            const videoEmbedUrl = `https://www.youtube.com/embed/${videoId}`;
+            const videoContainer = document.getElementById('videoContainer');
+            const iframe = document.createElement('iframe');
+            
+            iframe.src = videoEmbedUrl;
+            iframe.width = "560";
+            iframe.height = "315";
+            iframe.allow = "accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture";
+            iframe.allowFullscreen = true;
+            
+            // Clear previous video
+            videoContainer.innerHTML = "";
+            videoContainer.appendChild(iframe);
+        }
+
+        // Function to update the queue display
+        function updateQueueDisplay() {
+            const queueList = document.getElementById('queueList');
+            queueList.innerHTML = ''; // Clear current queue
+
+            videoQueue.forEach((video, index) => {
+                const listItem = document.createElement("li");
+                listItem.textContent = video.title;
+                listItem.addEventListener("click", function() {
+                    displayVideo(video.videoId);
+                });
+                queueList.appendChild(listItem);
+            });
+        }
+    </script>
+</body>
+</html>

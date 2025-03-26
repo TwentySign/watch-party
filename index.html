@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Discord YouTube Activity</title>
+    <title>Discord File Sorting Activity</title>
     <script src="https://unpkg.com/@discord/embedded-app-sdk"></script>
     <style>
         body {
@@ -33,16 +33,7 @@
             background: #444;
         }
 
-        input {
-            padding: 10px;
-            font-size: 16px;
-            width: 250px;
-            border: 2px solid #FF6600;
-            background: #222;
-            color: #FF6600;
-        }
-
-        #videoContainer {
+        #fileContainer {
             margin-top: 20px;
         }
 
@@ -79,140 +70,126 @@
     </style>
 </head>
 <body>
-    <h1>Discord YouTube Activity</h1>
+    <h1>Discord File Sorting Activity</h1>
 
     <button onclick="connectToDiscord()">Connect to Discord</button>
     <br><br>
 
-    <label>Search for Videos:</label>
-    <input type="text" id="searchQuery" placeholder="Enter video title">
-    <button onclick="searchVideos()">Search</button>
+    <label>Sort Files:</label>
+    <button onclick="sortFiles('memes')">Send to Memes</button>
+    <button onclick="sortFiles('bannedmemes')">Send to Banned Memes</button>
+    <button onclick="sortFiles('edits')">Send to Edits</button>
+    <button onclick="sortFiles('catmemes')">Send to Cat Memes</button>
+    <button onclick="sortFiles('ultrakill')">Send to Ultrakill</button>
 
-    <ul id="searchResults"></ul>
-
-    <div id="videoContainer"></div>
+    <div id="fileContainer"></div>
 
     <div id="queue">
-        <h2>Video Queue</h2>
+        <h2>File Queue</h2>
         <ul id="queueList"></ul>
     </div>
 
     <script>
         let discordClient = null;
-        let videoQueue = [];
-        let currentVideo = null;
+        let fileQueue = [];
+        let currentFile = null;
 
+        // Connect to Discord Activity API
         async function connectToDiscord() {
             try {
-                // Initialize Discord SDK
-                await window.Discord.initialize();
-                
-                // Get user context (what server, channel, etc.)
-                const context = await window.Discord.getContext();
-                
-                console.log("Connected to Discord in", context);
+                discordClient = await window.DiscordClient.ready();
                 alert("Connected to Discord!");
             } catch (error) {
                 console.error("Error connecting to Discord:", error);
-                alert("Failed to connect to Discord. Make sure this is opened inside a Discord Activity.");
+                alert("Failed to connect to Discord.");
             }
         }
 
-        async function searchVideos() {
-            const query = document.getElementById("searchQuery").value;
-            const apiKey = 'YOUR_YOUTUBE_API_KEY'; // Replace with a valid YouTube API key
-
-            if (!query) {
-                alert("Please enter a search term.");
-                return;
-            }
-
-            const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query)}&type=video&maxResults=5&key=${apiKey}`;
-            
-            try {
-                const response = await fetch(url);
-                const data = await response.json();
-
-                if (data.error) {
-                    console.error("YouTube API Error:", data.error);
-                    alert("YouTube API error. Check your API key.");
-                    return;
-                }
-
-                displaySearchResults(data.items);
-            } catch (error) {
-                console.error("Error fetching YouTube data:", error);
-                alert("An error occurred while fetching videos.");
+        // Function to simulate file sorting and add to queue
+        function sortFiles(category) {
+            // Simulate file being sorted
+            const file = getRandomFile(category);
+            if (file) {
+                addToQueue(file);
+                displayFile(file);
+                syncQueue();
+            } else {
+                alert("No files available to sort.");
             }
         }
 
-        function displaySearchResults(videos) {
-            const searchResults = document.getElementById("searchResults");
-            searchResults.innerHTML = "";
+        // Get a random file from a category (simulated function)
+        function getRandomFile(category) {
+            const files = {
+                memes: ["funny_dog.mp4", "cat_video.mp4", "meme_1.jpg"],
+                bannedmemes: ["banned_funny.mp4", "offensive_meme.jpg"],
+                edits: ["edit_1.mp4", "edit_2.mp4"],
+                catmemes: ["cat_meme_1.jpg", "cat_meme_2.jpg"],
+                ultrakill: ["ultrakill_clip.mp4", "ultrakill_montage.mp4"]
+            };
 
-            videos.forEach(video => {
-                const listItem = document.createElement("li");
-                listItem.textContent = video.snippet.title;
-                listItem.addEventListener("click", function () {
-                    addToQueue(video.id.videoId, video.snippet.title);
-                });
-                searchResults.appendChild(listItem);
-            });
+            const categoryFiles = files[category];
+            return categoryFiles ? categoryFiles[Math.floor(Math.random() * categoryFiles.length)] : null;
         }
 
-        function addToQueue(videoId, title) {
-            videoQueue.push({ videoId, title });
+        // Add file to queue
+        function addToQueue(file) {
+            fileQueue.push(file);
             updateQueueDisplay();
             syncQueue();
         }
 
+        // Sync queue across users
         function syncQueue() {
             if (!discordClient) return;
-            window.Discord.setActivity({
-                details: "Watching videos together",
-                state: videoQueue.map(v => v.title).join(", "),
+            discordClient.setActivity({
+                details: "Sorting Files",
+                state: fileQueue.join(", "),
                 instance: true,
             });
         }
 
-        function updateQueueDisplay() {
-            const queueList = document.getElementById("queueList");
-            queueList.innerHTML = "";
-
-            videoQueue.forEach((video, index) => {
-                const listItem = document.createElement("li");
-                listItem.textContent = video.title;
-                listItem.addEventListener("click", function () {
-                    playVideo(video.videoId);
-                });
-                queueList.appendChild(listItem);
-            });
-        }
-
-        function playVideo(videoId) {
-            const videoEmbedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
-            const videoContainer = document.getElementById("videoContainer");
+        // Display the current file being sorted
+        function displayFile(file) {
+            const fileContainer = document.getElementById("fileContainer");
             const iframe = document.createElement("iframe");
-            
-            iframe.src = videoEmbedUrl;
+
+            // Simulate displaying the file (in reality, this would be more complex, depending on file type)
+            iframe.src = `https://www.example.com/view/${file}`;  // Replace with an actual URL to preview the file
             iframe.width = "560";
             iframe.height = "315";
             iframe.allow = "accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture";
             iframe.allowFullscreen = true;
-            
-            videoContainer.innerHTML = "";
-            videoContainer.appendChild(iframe);
 
-            currentVideo = videoId;
-            syncVideo(videoId);
+            fileContainer.innerHTML = "";
+            fileContainer.appendChild(iframe);
+
+            currentFile = file;
+            syncFile(file);
         }
 
-        function syncVideo(videoId) {
+        // Sync file across users
+        function syncFile(file) {
             if (!discordClient) return;
-            window.Discord.setActivity({
-                details: `Watching: ${videoQueue.find(v => v.videoId === videoId)?.title || "Unknown"}`,
+            discordClient.setActivity({
+                details: `Sorting: ${file}`,
                 state: "In sync with call",
                 instance: true,
+            });
+        }
+
+        // Display the queue of files
+        function updateQueueDisplay() {
+            const queueList = document.getElementById("queueList");
+            queueList.innerHTML = "";
+
+            fileQueue.forEach((file, index) => {
+                const listItem = document.createElement("li");
+                listItem.textContent = file;
+                listItem.addEventListener("click", function () {
+                    displayFile(file);
+                });
+                queueList.appendChild(listItem);
             });
         }
     </script>

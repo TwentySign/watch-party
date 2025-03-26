@@ -102,35 +102,50 @@
         let videoQueue = [];
         let currentVideo = null;
 
-        // Connect to Discord Activity API
         async function connectToDiscord() {
             try {
-                discordClient = await window.DiscordClient.ready();
+                // Initialize Discord SDK
+                await window.Discord.initialize();
+                
+                // Get user context (what server, channel, etc.)
+                const context = await window.Discord.getContext();
+                
+                console.log("Connected to Discord in", context);
                 alert("Connected to Discord!");
             } catch (error) {
                 console.error("Error connecting to Discord:", error);
-                alert("Failed to connect to Discord.");
+                alert("Failed to connect to Discord. Make sure this is opened inside a Discord Activity.");
             }
         }
 
-        // Function to search YouTube videos
         async function searchVideos() {
             const query = document.getElementById("searchQuery").value;
-            const apiKey = 'AIzaSyCJA9ozKmzeOHw9wDVhxW67Jw9tYCCLgAk'; // Replace with a valid YouTube API key
-            const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${query}&type=video&maxResults=5&key=${apiKey}`;
+            const apiKey = 'YOUR_YOUTUBE_API_KEY'; // Replace with a valid YouTube API key
+
+            if (!query) {
+                alert("Please enter a search term.");
+                return;
+            }
+
+            const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query)}&type=video&maxResults=5&key=${apiKey}`;
             
-            fetch(url)
-                .then(response => response.json())
-                .then(data => {
-                    displaySearchResults(data.items);
-                })
-                .catch(error => {
-                    console.error("Error fetching YouTube data:", error);
-                    alert("An error occurred while fetching videos.");
-                });
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data.error) {
+                    console.error("YouTube API Error:", data.error);
+                    alert("YouTube API error. Check your API key.");
+                    return;
+                }
+
+                displaySearchResults(data.items);
+            } catch (error) {
+                console.error("Error fetching YouTube data:", error);
+                alert("An error occurred while fetching videos.");
+            }
         }
 
-        // Display search results
         function displaySearchResults(videos) {
             const searchResults = document.getElementById("searchResults");
             searchResults.innerHTML = "";
@@ -145,24 +160,21 @@
             });
         }
 
-        // Add video to the queue
         function addToQueue(videoId, title) {
             videoQueue.push({ videoId, title });
             updateQueueDisplay();
             syncQueue();
         }
 
-        // Sync queue across users
         function syncQueue() {
             if (!discordClient) return;
-            discordClient.setActivity({
+            window.Discord.setActivity({
                 details: "Watching videos together",
                 state: videoQueue.map(v => v.title).join(", "),
                 instance: true,
             });
         }
 
-        // Display the queue
         function updateQueueDisplay() {
             const queueList = document.getElementById("queueList");
             queueList.innerHTML = "";
@@ -177,7 +189,6 @@
             });
         }
 
-        // Play a video
         function playVideo(videoId) {
             const videoEmbedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
             const videoContainer = document.getElementById("videoContainer");
@@ -196,10 +207,9 @@
             syncVideo(videoId);
         }
 
-        // Sync video across users
         function syncVideo(videoId) {
             if (!discordClient) return;
-            discordClient.setActivity({
+            window.Discord.setActivity({
                 details: `Watching: ${videoQueue.find(v => v.videoId === videoId)?.title || "Unknown"}`,
                 state: "In sync with call",
                 instance: true,
